@@ -21,7 +21,7 @@ client.on("message", async message => {
 		return;
 	const filterString = message.content.slice(6).toLowerCase();
 	const cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
-	let matched = cards.filter(c => c.name.toLowerCase() === filterString);
+	let matched = cards.filter(c => c.name.toLowerCase().includes(filterString));
 	message.channel.send({ files: matched.map(c => `${BASE_URL}images/${c._id}.jpg`) });
 });
 
