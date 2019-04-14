@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { BOT_TOKEN, BASE_URL } = process.env;
+const { BOT_TOKEN, BASE_URL, DEV } = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
@@ -12,6 +12,11 @@ client.on("ready", () => {
 })
 
 client.on("message", async message => {
+	if(DEV){
+		if(!message.content.startsWith("!!"))
+			return;
+		message.content = message.content.slice(1);
+	}
 	if(!message.content.startsWith("!card"))
 		return;
 	const filterString = message.content.slice(6).toLowerCase();
