@@ -21,14 +21,17 @@ client.on("ready", () => {
 })
 
 client.on("message", async message => {
-	if(DEV){
-		if(!message.content.startsWith("!!"))
-			return;
-		message.content = message.content.slice(1);
-	}
-	if(!message.content.startsWith("!card"))
+	if(message.author.id === client.user.id)
 		return;
+	if(DEV && message.content.startsWith("!"))
+		message.content = message.content.slice(1);
+	if(!message.content.startsWith("!card")){
+		if(message.channel.id === CARDBOT_ID)
+			message.content = "!card " + message.content;
+		else return;
+	}
 	await cards;
+
 	let filterString = message.content.slice(6).toLowerCase();
 
 	if(message.channel.id === CARDBOT_ID && choices[filterString.slice(0,1)] && +filterString.slice(1)) {
@@ -61,7 +64,7 @@ async function postImage(card, channel, user){
 	imageUrl = [...message.attachments.values()][0].url;
 	let embed = new Discord.RichEmbed().setThumbnail(imageUrl);
 	if(channel.id !== cardbotChannel.id)
-		channel.send(`<#${cardbotChannel.id}> \`${cardStat(card)}\``, embed);
+		channel.send(`<@${user.id}> <#${cardbotChannel.id}> \`${cardStat(card)}\``, embed);
 }
 
 function postList(cards, channel, user){
