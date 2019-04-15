@@ -46,7 +46,6 @@ client.on("message", async message => {
 	}
 	
 	let filterRegex = new RegExp("^" + filterString.trim().split("").map(escapeRegexp).map(c => "(.*\\b(?<!')|)" + c).join(""), "i");
-	console.log(filterString, filterRegex)
 	let matched = cards.filter(c => filterRegex.test(c.name));
 
 	if(matched.length === 1)
@@ -65,7 +64,6 @@ async function postImage(card, channel, user){
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
 	let message = await cardbotChannel.send(`<#${channel.id}> <@${user.id}> \`${cardStat(card)}\``, { files: [imageUrl] });
-	console.log(message.attachments.values())
 	imageUrl = [...message.attachments.values()][0].url;
 	let embed = new Discord.RichEmbed().setThumbnail(imageUrl);
 	if(channel.id !== cardbotChannel.id)
