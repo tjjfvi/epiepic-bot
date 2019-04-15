@@ -52,7 +52,7 @@ client.on("message", async message => {
 	}
 	await cards;
 
-	let filterString = content.slice(6).toLowerCase();
+	let filterString = content.slice(6).toLowerCase().trim();
 
 	if(message.channel.id === CARDBOT_ID && choices[filterString.slice(0,1)] && +filterString.slice(1)) {
 		let { channel: _channel, user, cards, open } = choice = choices[filterString.slice(0,1)];
@@ -64,13 +64,16 @@ client.on("message", async message => {
 	
 	let filterRegex = new RegExp(
 		"^" + filterString
-			.trim()
 			.split("")
 			.map(escapeRegexp)
 			.map(c => "(.*\\b(?<!')|)" + c)
 		.join("")
 	, "i");
-	let matched = cards.filter(c => filterRegex.test(c.name));
+	let matched = cards.filter(c =>
+		filterRegex.test(c.name) ||
+		(filterString.length >= 4 && c.traits && c.traits.toLowerCase().includes(filterString)) ||
+		false
+	).sort((a, b) => a.name > b.name ? 1 : -1);
 
 	if(matched.length === 1)
 		return postImage(matched[0], channel, author);
