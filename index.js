@@ -7,12 +7,17 @@ const { BOT_TOKEN, CARDBOT_ID, BASE_URL, DEV } = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
+const FuzzySearch = require("fuzzy-search");
 
 const client = new Discord.Client();
 
 let alpha = "abcdefghijklmnopqrstuvwxyz".split("");
 let letterInd = 0;
-let cards = (async () => cards = await (await fetch(`${BASE_URL}api/card/.json`)).json())();
+let cards = (async () => {
+	cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
+	cardSearcher = new FuzzySearch(cards, ["name"], { sort: true });
+})();
+let cardSearcher;
 
 const choices = {};
 
@@ -42,7 +47,7 @@ client.on("message", async message => {
 		return;
 	}
 	
-	let matched = cards.filter(c => c.name.toLowerCase().includes(filterString));
+	let matched = cardSearcher.search(filterString);
 
 	if(matched.length === 1)
 		return postImage(matched[0], message.channel, message.author);
@@ -73,7 +78,7 @@ function postList(cards, channel, user){
 	let letter = alpha[letterInd++ % alpha.length];
 	cardbotChannel.send(`<@${user.id}> Which?\n\`\`\`\n${
 		cards.map((c, i) =>
-			(letter+(i+1)).padStart(cards.length.toString().length, " ") + ": " + cardStat(c)
+			(letter+(i+1)).padStart(cards.length.toString().length+1, " ") + ": " + cardStat(c)
 		).join("\n")
 	}\n\`\`\``);
 	choices[letter] = {
