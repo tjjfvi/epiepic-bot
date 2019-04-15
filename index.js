@@ -7,7 +7,7 @@ const { BOT_TOKEN, CARDBOT_ID, BASE_URL, DEV } = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
-const FuzzySearch = require("fuzzy-search");
+const escapeRegexp = require("escape-string-regexp");
 
 const client = new Discord.Client();
 
@@ -15,9 +15,7 @@ let alpha = "abcdefghijklmnopqrstuvwxyz".split("");
 let letterInd = 0;
 let cards = (async () => {
 	cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
-	cardSearcher = new FuzzySearch(cards, ["name"], { sort: true });
 })();
-let cardSearcher;
 
 const choices = {};
 
@@ -47,7 +45,9 @@ client.on("message", async message => {
 		return;
 	}
 	
-	let matched = cardSearcher.search(filterString);
+	let filterRegex = new RegExp("^" + filterString.trim().split("").map(escapeRegexp).map(c => "(.*\\b(?<!')|)" + c).join(""), "i");
+	console.log(filterString, filterRegex)
+	let matched = cards.filter(c => filterRegex.test(c.name));
 
 	if(matched.length === 1)
 		return postImage(matched[0], message.channel, message.author);
