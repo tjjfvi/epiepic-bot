@@ -8,6 +8,7 @@ const { BOT_TOKEN, CARDBOT_ID, BASE_URL, DEV } = process.env;
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const escapeRegexp = require("escape-string-regexp");
+const fs = require("fs-extra");
 
 const client = new Discord.Client();
 
@@ -31,6 +32,12 @@ client.on("message", async message => {
 		return;
 	if(DEV && content.startsWith("!"))
 		content = content.slice(1);
+	if(content.startsWith("!commands") || content.startsWith("!help"))
+		return channel.send(
+			(await fs.readFile(__dirname + "/help.md", "utf8"))
+				.replace("#cardbot", `<#${CARDBOT_ID}>`)
+				.replace("@epiepic", `<@${client.user.id}>`)
+		);
 	if(!content.startsWith("!card")){
 		if(channel.id === CARDBOT_ID)
 			content = "!card " + content;
@@ -71,7 +78,7 @@ client.on("message", async message => {
 });
 
 function cardStat(c){
-	return `${c.factionName.slice(0,1)} ${c.cost}${c.typeName.slice(0,1)} ${c.name}` + (c.packCode === "promos" ? " (promo)" : "");
+	return `${c.faction.slice(0,1)} ${c.cost}${c.type.slice(0,1)} ${c.name}` + (c.packCode === "promos" ? " (promo)" : "");
 }
 
 async function postImage(card, channel, user){
