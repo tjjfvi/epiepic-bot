@@ -19,39 +19,54 @@ let cards = (async () => {
 
 const choices = {};
 
+const channelLinkRegex = /^(.*)<#(\d+)>$/;
+
 client.on("ready", () => {
 	console.log("Bot ready");
 })
 
 client.on("message", async message => {
-	if(message.author.id === client.user.id)
+	let { author, content, channel } = message;
+	if(author.id === client.user.id)
 		return;
-	if(DEV && message.content.startsWith("!"))
-		message.content = message.content.slice(1);
-	if(!message.content.startsWith("!card")){
-		if(message.channel.id === CARDBOT_ID)
-			message.content = "!card " + message.content;
+	if(DEV && content.startsWith("!"))
+		content = content.slice(1);
+	if(!content.startsWith("!card")){
+		if(channel.id === CARDBOT_ID)
+			content = "!card " + content;
 		else return;
+	}
+	if(channel.id === CARDBOT_ID && channelLinkRegex.test(content)){
+		let [_, _content, channelId] = channelLinkRegex.exec(content);
+		content = _content;
+		channel = channel.guild.channels.get(channelId);
 	}
 	await cards;
 
-	let filterString = message.content.slice(6).toLowerCase();
+	let filterString = content.slice(6).toLowerCase();
 
 	if(message.channel.id === CARDBOT_ID && choices[filterString.slice(0,1)] && +filterString.slice(1)) {
-		let { channel, user, cards, open } = choice = choices[filterString.slice(0,1)];
+		let { channel: _channel, user, cards, open } = choice = choices[filterString.slice(0,1)];
 		let card = cards[filterString.slice(1)-1];
-		postImage(card, user.id === message.author.id && open ? channel : message.channel, message.author);
+		postImage(card, user.id === author.id && open && channel === message.channel ? _channel : channel, author);
 		choice.open = false;
 		return;
 	}
 	
-	let filterRegex = new RegExp("^" + filterString.trim().split("").map(escapeRegexp).map(c => "(.*\\b(?<!')|)" + c).join(""), "i");
+	let filterRegex = new RegExp(
+		"^" + filterString
+			.trim()
+			.split("")
+			.map(escapeRegexp)
+			.map(c => "(.*\\b(?<!')|)" + c)
+		.join("")
+	, "i");
 	let matched = cards.filter(c => filterRegex.test(c.name));
 
 	if(matched.length === 1)
-		return postImage(matched[0], message.channel, message.author);
+		return postImage(matched[0], channel, author);
 	if (matched.length)
-		return postList(matched, message.channel, message.author);
+		return postList(matched, channel, author);
 	message.channel.send("No card found.");
 });
 
