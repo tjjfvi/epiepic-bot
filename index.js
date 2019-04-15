@@ -27,6 +27,8 @@ client.on("ready", () => {
 })
 
 client.on("message", async message => {
+	if(message.content.includes("*") || message.mentions.users.keyArray().length)
+		return;
 	let { author, content, channel } = message;
 	if(author.id === client.user.id)
 		return;
