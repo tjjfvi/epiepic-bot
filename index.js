@@ -3,7 +3,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 require("dotenv").config();
 
-const { BOT_TOKEN, DECKLIST_ID, CARDBOT_ID, BASE_URL, DEV } = process.env;
+const { BOT_TOKEN, DECKLIST_ID, CARDBOT_ID, BASE_URL, DEV, RULES_URL_RAW, RULES_URL_BLOB } = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
@@ -18,6 +18,9 @@ let alpha = "abcdefghijklmnopqrstuvwxyz".split("");
 let letterInd = 0;
 let cards = (async () => {
 	cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
+})();
+let rulesText = (async () => {
+	rulesText = await fetch(RULES_URL_RAW).then(r => r.text());
 })();
 
 const choices = {};
@@ -44,6 +47,8 @@ client.on("message", async message => {
 		);
 	if(content.startsWith("!r60") || content.startsWith("!r56"))
 		return rN(channel, author, +content.slice(2,4));
+	if(content.startsWith("!r "))
+		return parseRules(channel, content.slice(3));
 	if(!content.startsWith("!card")){
 		if(channel.id === CARDBOT_ID)
 			content = "!card " + content;
@@ -85,6 +90,28 @@ client.on("message", async message => {
 		return postList(matched, channel, author);
 	message.channel.send("No card found.");
 });
+
+async function parseRules(channel, filterString){
+	await rulesText;
+	
+	if(/^\d.\d+.\d+[a-z]?$/.test(filterString)){
+		let line = rulesText.split("\n").find(l => l.startsWith(filterString));
+		if(line)
+			return channel.send("```"+line+"```");
+		return channel.send(`Line ${filterString} not found.`);
+	}
+
+	let section = rulesText.split("\n").find(l => l.startsWith("#") && l.toLowerCase().includes(filterString.toLowerCase()));
+	
+	if(!section)
+		return channel.send(`Section ${filterString} not found.`);
+
+	console.log(section.split(/ /)[1]);
+	let hash = "#" + section.split(" ").slice(1).join(" ").toLowerCase().replace(" ", "-").replace(/[^\w\-]/g, "");
+	let link = RULES_URL_BLOB + hash;
+
+	channel.send({ embed: { url: link, title: section.replace(/^#+ /, "") } });
+}
 
 async function rN(channel, user, n){
 	let N = n;
