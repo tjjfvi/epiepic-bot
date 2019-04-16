@@ -3,12 +3,14 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 require("dotenv").config();
 
-const { BOT_TOKEN, CARDBOT_ID, BASE_URL, DEV } = process.env;
+const { BOT_TOKEN, DECKLIST_ID, CARDBOT_ID, BASE_URL, DEV } = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
 const escapeRegexp = require("escape-string-regexp");
 const fs = require("fs-extra");
+const express = require("express");
+const bodyParser = require("body-parser");
 
 const client = new Discord.Client();
 
@@ -115,3 +117,27 @@ function postList(cards, channel, user){
 }
 
 client.login(BOT_TOKEN);
+
+const app = express();
+
+app.post("/newDeck", bodyParser.text(), async (req, res) => {
+	res.status(204).end();
+
+	const id = req.body;
+	let [{ title, poster: { discordId: posterId } }, { url }] = await Promise.all([
+		fetch(`${BASE_URL}api/deck:${id}/`).then(r => r.json()).then(async d => ({
+			...d,
+			poster: (await (await fetch(`${BASE_URL}api/user:${d.poster}`)).json()),
+		})),
+		fetch(`${BASE_URL}api/link/new/`, {
+			method: "POST",
+			body: JSON.stringify({ url: `${BASE_URL}deck?id=${id}` }),
+			headers: { "Content-Type": "application/json" },
+		}).then(r => r.json()),
+	]);
+
+	const channel = client.guilds.array()[0].channels.get(DECKLIST_ID);
+	channel.send(`A new deck was posted by <@${posterId}>: *${title}* – ${url}`);
+});
+
+app.listen(process.env.PORT || 15149);
