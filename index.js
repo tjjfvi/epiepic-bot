@@ -42,6 +42,8 @@ client.on("message", async message => {
 				.replace("#cardbot", `<#${CARDBOT_ID}>`)
 				.replace("@epiepic", `<@${client.user.id}>`)
 		);
+	if(content.startsWith("!r60") || content.startsWith("!r56"))
+		return rN(channel, author, +content.slice(2,4));
 	if(!content.startsWith("!card")){
 		if(channel.id === CARDBOT_ID)
 			content = "!card " + content;
@@ -84,6 +86,29 @@ client.on("message", async message => {
 	message.channel.send("No card found.");
 });
 
+async function rN(channel, user, n){
+	let N = n;
+	let fs = [13,13,13,13];
+	while(n > 52){
+		let i = Math.floor(Math.random()*4);
+		if(fs[i] === 17)
+			continue;
+		n--;
+		fs[i]++;
+	}
+	let factions = "GOOD SAGE EVIL WILD".split(" ").map(f => cards.filter(c => c.faction === f && c.packCode !== "promos"));
+	let deck = [];
+	fs.map((m, i) => {
+		for(;m;m--)
+			deck.push(factions[i].splice(Math.floor(Math.random()*factions[i].length), 1)[0]);
+	})
+	let x = Buffer.from(JSON.stringify(deck.map(c => ({ c: 1, n: c.cardCode }))), "utf8").toString("base64");
+	let link = await shortlink(`${BASE_URL}?x=${x}&r60`);
+	channel.send(`${user} R${N}: ${link}`);
+	let dm = await user.createDM();
+	dm.send(`R${N}: ${link}`);
+}
+
 function cardStat(c){
 	return `${c.faction.slice(0,1)} ${c.cost}${c.type.slice(0,1)} ${c.name}` + (c.packCode === "promos" ? " (promo)" : "");
 }
@@ -116,6 +141,14 @@ function postList(cards, channel, user){
 	};
 }
 
+async function shortlink(url){
+	return (await fetch(`${BASE_URL}api/link/new/`, {
+		method: "POST",
+		body: JSON.stringify({ url }),
+		headers: { "Content-Type": "application/json" },
+	}).then(r => r.json())).url;
+}
+
 client.login(BOT_TOKEN);
 
 const app = express();
@@ -129,11 +162,7 @@ app.post("/newDeck", bodyParser.text(), async (req, res) => {
 			...d,
 			poster: (await (await fetch(`${BASE_URL}api/user:${d.poster}`)).json()),
 		})),
-		fetch(`${BASE_URL}api/link/new/`, {
-			method: "POST",
-			body: JSON.stringify({ url: `${BASE_URL}deck?id=${id}` }),
-			headers: { "Content-Type": "application/json" },
-		}).then(r => r.json()),
+		shortlink(`${BASE_URL}deck?id=${id}`),
 	]);
 
 	const channel = client.guilds.array()[0].channels.get(DECKLIST_ID);
