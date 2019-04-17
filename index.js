@@ -3,7 +3,17 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 require("dotenv").config();
 
-const { BOT_TOKEN, DECKLIST_ID, CARDBOT_ID, BASE_URL, DEV, RULES_URL_RAW, RULES_URL_BLOB } = process.env;
+const {
+	BOT_TOKEN,
+	DECKLIST_ID,
+	CARDBOT_ID,
+	BASE_URL,
+	DEV,
+	RULES_URL_RAW,
+	RULES_URL_BLOB,
+	RULINGS_URL_RAW,
+	RULINGS_URL_BLOB,
+} = process.env;
 
 const Discord = require("discord.js");
 const fetch = require("node-fetch");
@@ -19,8 +29,12 @@ let letterInd = 0;
 let cards = (async () => {
 	cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
 })();
+let rulingsText;
 let rulesText = (async () => {
-	rulesText = await fetch(RULES_URL_RAW).then(r => r.text());
+	[rulesText, rulingsText] = await Promise.all([
+		fetch(RULES_URL_RAW).then(r => r.text()),
+		fetch(RULINGS_URL_RAW).then(r => r.text()),
+	]);
 })();
 
 const choices = {};
@@ -101,16 +115,21 @@ async function parseRules(channel, filterString){
 		return channel.send(`Line ${filterString} not found.`);
 	}
 
-	let section = rulesText.split("\n").find(l => l.startsWith("#") && l.toLowerCase().includes(filterString.toLowerCase()));
+	findSection = t => t.split("\n").find(l => l.startsWith("#") && l.toLowerCase().includes(filterString.toLowerCase()));
+
+	let section = findSection(rulesText);
+	let url = RULES_URL_BLOB;
+
+	if(!section)
+		[section, url] = [findSection(rulingsText), RULINGS_URL_BLOB];
 	
 	if(!section)
 		return channel.send(`Section ${filterString} not found.`);
 
-	console.log(section.split(/ /)[1]);
-	let hash = "#" + section.split(" ").slice(1).join(" ").toLowerCase().replace(" ", "-").replace(/[^\w\-]/g, "");
-	let link = RULES_URL_BLOB + hash;
+	let hash = "#" + section.split(" ").slice(1).join(" ").toLowerCase().replace(/ /g, "-").replace(/[^\w\-]/g, "");
+	url += hash;
 
-	channel.send({ embed: { url: link, title: section.replace(/^#+ /, "") } });
+	channel.send({ embed: { url, title: section.replace(/^#+ /, "") } });
 }
 
 async function rN(channel, user, n){
