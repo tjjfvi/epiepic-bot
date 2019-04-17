@@ -63,6 +63,8 @@ client.on("message", async message => {
 		return rN(channel, author, +content.slice(2,4));
 	if(content.startsWith("!r "))
 		return parseRules(channel, content.slice(3));
+	if(content.startsWith("!c "))
+		content = "!card " + content.slice(3);
 	if(!content.startsWith("!card")){
 		if(channel.id === CARDBOT_ID)
 			content = "!card " + content;
@@ -203,7 +205,7 @@ app.post("/newDeck", bodyParser.text(), async (req, res) => {
 	res.status(204).end();
 
 	const id = req.body;
-	let [{ title, poster: { discordId: posterId } }, { url }] = await Promise.all([
+	let [{ title, poster: { discordId: posterId } }, url] = await Promise.all([
 		fetch(`${BASE_URL}api/deck:${id}/`).then(r => r.json()).then(async d => ({
 			...d,
 			poster: (await (await fetch(`${BASE_URL}api/user:${d.poster}`)).json()),
