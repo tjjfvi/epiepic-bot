@@ -104,7 +104,10 @@ client.on("message", async message => {
 		return postImage(matched[0], channel, author);
 	if (matched.length)
 		return postList(matched, channel, author);
-	message.channel.send("No card found.");
+
+	if(message.channel.id !== CARDBOT_ID)
+		return message.channel.send("No card found.");
+	message.react(message.guild.emojis.find(e => e.name === "nogold"));
 });
 
 async function parseRules(channel, filterString){
