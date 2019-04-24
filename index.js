@@ -107,7 +107,7 @@ client.on("message", async message => {
 
 	if(message.channel.id !== CARDBOT_ID)
 		return message.channel.send("No card found.");
-	message.react(message.guild.emojis.find(e => e.name === "nogold"));
+	message.react(emoji("nogold"));
 });
 
 async function parseRules(channel, filterString){
@@ -160,26 +160,40 @@ async function rN(channel, user, n){
 	dm.send(`R${N}: ${link}`);
 }
 
-function cardStat(c){
-	return `${c.faction.slice(0,1)} ${c.cost}${c.type.slice(0,1)} ${c.name}` + (c.packCode === "promos" ? " (promo)" : "");
+function emoji(name){
+	return client.guilds.find(() => true).emojis.find(e => e.name === name);
+}
+
+function cardStat(c, e){
+	return `${
+		e ? emoji(c.faction.toLowerCase()) : c.faction.slice(0,1)
+	} ${
+		e ? emoji(c.cost ? "gold" : "nogold") : c.cost
+	} ${
+		c.type[0] === "C" ? `${c.offense.toString().padStart(2," ")}/${c.defense.toString().padEnd(2," ")}` : "  -  "
+	} ${
+		c.name
+	}${
+		c.packCode === "promos" ? " (promo)" : ""
+	}`;
 }
 
 async function postImage(card, channel, user){
 	let { guild } = channel;
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
-	let message = await cardbotChannel.send(`<#${channel.id}> <@${user.id}> \`${cardStat(card)}\``, { files: [imageUrl] });
+	let message = await cardbotChannel.send(`<#${channel.id}> <@${user.id}> ${cardStat(card, true)}`, { files: [imageUrl] });
 	imageUrl = [...message.attachments.values()][0].url;
 	let embed = new Discord.RichEmbed().setThumbnail(imageUrl);
 	if(channel.id !== cardbotChannel.id)
-		channel.send(`<@${user.id}> <#${cardbotChannel.id}> \`${cardStat(card)}\``, embed);
+		channel.send(`<@${user.id}> <#${cardbotChannel.id}> ${cardStat(card, true)}`, embed);
 }
 
 function postList(cards, channel, user){
 	let { guild } = channel;
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let letter = alpha[letterInd++ % alpha.length];
-	cardbotChannel.send(`<@${user.id}> Which?\n\`\`\`\n${
+	cardbotChannel.send(`<@${user.id}> Which?\n\`\`\`${
 		cards.map((c, i) =>
 			(letter+(i+1)).padStart(cards.length.toString().length+1, " ") + ": " + cardStat(c)
 		).join("\n")
