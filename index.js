@@ -105,8 +105,6 @@ client.on("message", async message => {
 	if (matched.length)
 		return postList(matched, channel, author);
 
-	if(message.channel.id !== CARDBOT_ID)
-		return message.channel.send("No card found.");
 	message.react(emoji("nogold"));
 });
 
