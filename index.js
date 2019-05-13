@@ -46,6 +46,7 @@ client.on("ready", () => {
 })
 
 client.on("message", async message => {
+	message.content = message.content.replace(/[’‘`]/g, "'");
 	if(message.content.includes("*") || message.mentions.users.keyArray().length)
 		return;
 	let { author, content, channel } = message;
