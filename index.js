@@ -47,6 +47,10 @@ client.on("ready", () => {
 
 client.on("message", async message => {
 	message.content = message.content.replace(/[’‘`]/g, "'");
+	if(DEV && message.content.startsWith("!"))
+		message.content = message.content.slice(1);
+	else if(DEV)
+		return;
 	if(/.*\[\[.*\]\].*/.test(message.content))
 		message.content.match(/\[\[.*?\]\]/g).map(m =>
 			cardbot(message, "!card " + m.slice(2, -2), message.author, message.channel)
@@ -56,8 +60,6 @@ client.on("message", async message => {
 	let { author, content, channel } = message;
 	if(author.id === client.user.id)
 		return;
-	if(DEV && content.startsWith("!"))
-		content = content.slice(1);
 	if(content.startsWith("!commands") || content.startsWith("!help"))
 		return channel.send(
 			(await fs.readFile(__dirname + "/help.md", "utf8"))
