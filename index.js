@@ -47,6 +47,10 @@ client.on("ready", () => {
 
 client.on("message", async message => {
 	message.content = message.content.replace(/[’‘`]/g, "'");
+	if(/.*\[\[.*\]\].*/.test(message.content))
+		message.content.match(/\[\[.*?\]\]/g).map(m =>
+			cardbot(message, "!card " + m.slice(2, -2), message.author, message.channel)
+		);
 	if(message.content.includes("*") || message.mentions.users.keyArray().length)
 		return;
 	let { author, content, channel } = message;
@@ -76,6 +80,10 @@ client.on("message", async message => {
 		content = _content;
 		channel = channel.guild.channels.get(channelId);
 	}
+	cardbot(message, content, author, channel);
+});
+
+async function cardbot(message, content, author, channel){
 	await cards;
 
 	let filterString = content.slice(6).toLowerCase().trim();
@@ -107,7 +115,7 @@ client.on("message", async message => {
 		return postList(matched, channel, author);
 
 	message.react(emoji("nogold"));
-});
+}
 
 async function parseRules(channel, filterString){
 	await rulesText;
