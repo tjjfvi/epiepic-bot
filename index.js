@@ -75,7 +75,7 @@ client.on("message", async message => {
 	if(content.startsWith("!r60") || content.startsWith("!r56"))
 		return rN(channel, author, +content.slice(2,4));
 	if(content.startsWith("!r "))
-		return parseRules(channel, content.slice(3));
+		return parseRules(message, channel, content.slice(3));
 	if(content.startsWith("!c "))
 		content = "!card " + content.slice(3);
 	if(!content.startsWith("!card")){
@@ -125,14 +125,14 @@ async function cardbot(message, content, author, channel){
 	message.react(emoji("nogold"));
 }
 
-async function parseRules(channel, filterString){
+async function parseRules(message, channel, filterString){
 	await rulesText;
 	
 	if(/^\d.\d+.\d+[a-z]?$/.test(filterString)){
 		let line = rulesText.split("\n").find(l => l.startsWith(filterString));
 		if(line)
 			return channel.send("```"+line+"```");
-		return channel.send(`Line ${filterString} not found.`);
+		return message.react(emoji("nogold"));
 	}
 
 	findSection = t => t.split("\n").find(l => l.startsWith("#") && l.toLowerCase().includes(filterString.toLowerCase()));
@@ -144,7 +144,7 @@ async function parseRules(channel, filterString){
 		[section, url] = [findSection(rulingsText), RULINGS_URL_BLOB];
 	
 	if(!section)
-		return channel.send(`Section ${filterString} not found.`);
+		return message.react(emoji("nogold"));
 
 	let hash = "#" + section.split(" ").slice(1).join(" ").toLowerCase().replace(/ /g, "-").replace(/[^\w\-]/g, "");
 	url += hash;
