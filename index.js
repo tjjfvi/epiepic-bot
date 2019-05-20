@@ -197,9 +197,10 @@ function cardStat(c, e){
 async function postImage(card, channel, user, filterString){
 	let { guild } = channel;
 	let member = await guild.fetchMember(user, false);
+	let nick = member.nickname || user.username;
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
-	let message = await cardbotChannel.send(`<#${channel.id}> <@${user.id}> ${cardStat(card, true)}`, { files: [imageUrl] });
+	let message = await cardbotChannel.send(`<#${channel.id}> ${nick} ${cardStat(card, true)}`, { files: [imageUrl] });
 	imageUrl = [...message.attachments.values()][0].url;
 	let formatTextVar = t => t
 		.replace(/\n(.)/g, " $1")
@@ -217,7 +218,7 @@ async function postImage(card, channel, user, filterString){
 			value: formatTextVar(card.discardVar),
 		}] : [],
 		footer: {
-			text: `re ${member.nickname || user.username} '${filterString}'`,
+			text: `re ${nick} '${filterString}'`,
 		},
 	};
 	if(channel.id !== cardbotChannel.id)
