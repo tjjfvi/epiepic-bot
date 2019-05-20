@@ -1,4 +1,11 @@
 
+let colors = {
+	good: 0xddbb22,
+	sage: 0x6666ff,
+	evil: 0xdd3333,
+	wild: 0x22aa22,
+};
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 require("dotenv").config();
@@ -91,9 +98,9 @@ async function cardbot(message, content, author, channel){
 	let filterString = content.slice(6).toLowerCase().trim();
 
 	if(message.channel.id === CARDBOT_ID && choices[filterString.slice(0,1)] && +filterString.slice(1)) {
-		let { channel: _channel, user, cards, open } = choice = choices[filterString.slice(0,1)];
+		let { channel: _channel, user, cards, filterString: str, open } = choice = choices[filterString.slice(0,1)];
 		let card = cards[filterString.slice(1)-1];
-		postImage(card, user.id === author.id && open && channel === message.channel ? _channel : channel, author);
+		postImage(card, user.id === author.id && open && channel === message.channel ? _channel : channel, author, str);
 		choice.open = false;
 		return;
 	}
@@ -112,9 +119,9 @@ async function cardbot(message, content, author, channel){
 	).sort((a, b) => a.name > b.name ? 1 : -1);
 
 	if(matched.length === 1)
-		return postImage(matched[0], channel, author);
+		return postImage(matched[0], channel, author, filterString);
 	if (matched.length)
-		return postList(matched, channel, author);
+		return postList(matched, channel, author, filterString);
 
 	message.react(emoji("nogold"));
 }
@@ -187,18 +194,37 @@ function cardStat(c, e){
 	}`;
 }
 
-async function postImage(card, channel, user){
+async function postImage(card, channel, user, filterString){
 	let { guild } = channel;
+	let member = await guild.fetchMember(user, false);
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
 	let message = await cardbotChannel.send(`<#${channel.id}> <@${user.id}> ${cardStat(card, true)}`, { files: [imageUrl] });
 	imageUrl = [...message.attachments.values()][0].url;
-	let embed = new Discord.RichEmbed().setThumbnail(imageUrl);
+	let formatTextVar = t => t
+		.replace(/\n(.)/g, " $1")
+		.replace(/\n\n/g, "\n")
+		.replace(/\[(.+?)\]/g, "**$1**")
+		.replace(/<\/?i>/g, "*")
+	let embed = {
+		color: colors[card.faction.toLowerCase()],
+		thumbnail: { url: imageUrl },
+		title: cardStat(card, true),
+		url: imageUrl,
+		description: formatTextVar(card.textVar),
+		fields: card.discardVar ? [{
+			name: "Discard:",
+			value: formatTextVar(card.discardVar),
+		}] : [],
+		footer: {
+			text: `re ${member.nickname || user.username} '${filterString}'`,
+		},
+	};
 	if(channel.id !== cardbotChannel.id)
-		channel.send(`<@${user.id}> <#${cardbotChannel.id}> ${cardStat(card, true)}`, embed);
+		channel.send({ embed });
 }
 
-function postList(cards, channel, user){
+function postList(cards, channel, user, filterString){
 	let { guild } = channel;
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
 	let letter = alpha[letterInd++ % alpha.length];
@@ -212,6 +238,7 @@ function postList(cards, channel, user){
 		user,
 		cards,
 		open: true,
+		filterString,
 	};
 }
 
