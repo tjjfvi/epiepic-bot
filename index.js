@@ -66,9 +66,7 @@ client.on("message", async message => {
 	if(message.content.includes("*") || message.mentions.users.keyArray().length)
 		return;
 	let { author, content, channel } = message;
-	if(author.id === client.user.id)
-		return;
-	if(content.startsWith("!commands") || content.startsWith("!help"))
+	if(/^!(help|commands)$/i.test(content))
 		return channel.send(
 			(await fs.readFile(__dirname + "/help.md", "utf8"))
 				.replace("#cardbot", `<#${CARDBOT_ID}>`)
