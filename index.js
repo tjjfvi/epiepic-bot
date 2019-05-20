@@ -53,6 +53,7 @@ client.on("ready", () => {
 })
 
 client.on("message", async message => {
+	if(message.author.bot) return;
 	message.content = message.content.replace(/[’‘`]/g, "'");
 	if(DEV && message.content.startsWith("!"))
 		message.content = message.content.slice(1);
