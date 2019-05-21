@@ -59,11 +59,11 @@ client.on("message", async message => {
 		message.content = message.content.slice(1);
 	else if(DEV)
 		return;
-	if(/.*(\[\[.*\]\]|\{\{.*\}\}).*/.test(message.content)) {
-		(message.content.match(/\[\[.*?\]\]/g) || []).map(m =>
+	if(/.*(\[\[.*\]\]|\{\{.*\}\}|\(\(.*\)\)).*/.test(message.content)) {
+		(message.content.match(/\[\[.*?\]\]|\(\([^\d].*?\)\)/g) || []).map(m =>
 			cardbot(message, "!card " + m.slice(2, -2), message.author, message.channel)
 		);
-		(message.content.match(/\{\{.*?\}\}/g) || []).map(m =>
+		(message.content.match(/\{\{.*?\}\}|\(\(\d.*?\)\)/g) || []).map(m =>
 			parseRules(message, message.channel, m.slice(2, -2))
 		);
 	}
