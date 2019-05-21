@@ -9,5 +9,6 @@ Search cards, or specify one of multiple options. Can inject result into specifi
 
 `!r n[.n[.n]]`
 `!r searchString`
+`...{{searchString|n[.n[.n]]}}...`
 Search for a line/section in the Epic rules/rulings.
 
