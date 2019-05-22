@@ -78,6 +78,8 @@ client.on("message", async message => {
 		);
 	if(content.startsWith("!r60") || content.startsWith("!r56"))
 		return rN(channel, author, +content.slice(2,4));
+	if(content === "!cr")
+		content = "!card random";
 	if(content.startsWith("!r "))
 		return parseRules(message, channel, content.slice(3));
 	if(content.startsWith("!c "))
@@ -120,6 +122,9 @@ async function cardbot(message, content, author, channel){
 		(filterString.length >= 4 && c.traits && c.traits.toLowerCase().includes(filterString)) ||
 		false
 	).sort((a, b) => a.name > b.name ? 1 : -1);
+
+	if(filterString === "random")
+		matched = [cards[Math.floor(Math.random() * cards.length)]];
 
 	if(matched.length === 1)
 		return postImage(matched[0], channel, author, filterString);
