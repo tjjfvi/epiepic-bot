@@ -216,7 +216,7 @@ async function postImage(card, channel, user, filterString){
 		.replace(/\n(.)/g, " $1")
 		.replace(/\n\n/g, "\n")
 		.replace(/\[(.+?)\]/g, "**$1**")
-		.replace(/<\/?i>/g, "*")
+		.replace(/<\/?i>/gi, "*")
 	let embed = {
 		color: colors[card.faction.toLowerCase()],
 		thumbnail: { url: imageUrl },
