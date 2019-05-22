@@ -14,6 +14,7 @@ const {
 	BOT_TOKEN,
 	DECKLIST_ID,
 	CARDBOT_ID,
+	SINK_ID,
 	BASE_URL,
 	DEV,
 	RULES_URL_RAW,
@@ -207,8 +208,9 @@ async function postImage(card, channel, user, filterString){
 	let member = await guild.fetchMember(user, false);
 	let nick = member.nickname || user.username;
 	let cardbotChannel = guild.channels.get(CARDBOT_ID);
+	let sinkChannel = guild.channels.get(SINK_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
-	let message = await cardbotChannel.send(`<#${channel.id}> ${nick} ${cardStat(card, true)}`, { files: [imageUrl] });
+	let message = await sinkChannel.send({ files: [imageUrl] });
 	imageUrl = [...message.attachments.values()][0].url;
 	let formatTextVar = t => t
 		.replace(/\n(.)/g, " $1")
@@ -229,6 +231,7 @@ async function postImage(card, channel, user, filterString){
 			text: `re ${nick} '${filterString}'`,
 		},
 	};
+	cardbotChannel.send(channel.id === cardbotChannel.id ? "" : channel+"", { embed });
 	if(channel.id !== cardbotChannel.id)
 		channel.send({ embed });
 }
