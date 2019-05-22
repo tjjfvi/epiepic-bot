@@ -11,7 +11,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 require("dotenv").config();
 
 const {
+	TWITCH_ID,
 	BOT_TOKEN,
+	GUILD_ID,
+	STREAMS_ID,
 	DECKLIST_ID,
 	CARDBOT_ID,
 	SINK_ID,
@@ -51,6 +54,8 @@ const channelLinkRegex = /^(.*)<#(\d+)>$/;
 
 client.on("ready", () => {
 	console.log("Bot ready");
+	pingTwitch(true);
+	setInterval(() => pingTwitch(), 10000);
 })
 
 client.on("message", async message => {
@@ -270,6 +275,36 @@ async function shortlink(url){
 client.login(BOT_TOKEN);
 
 const app = express();
+
+let lastIds = [];
+
+async function pingTwitch(noSend){
+	let t = {
+		headers: { "Client-ID": TWITCH_ID },
+	};
+	let { data: cur } = await fetch(`https://api.twitch.tv/helix/streams?game_id=496145&first=100`, t).then(r => r.json());
+	console.log(lastIds, cur, noSend, Math.random());
+	let oldLastIds = lastIds;
+	lastIds = cur.map(c => c.id);
+	cur = cur.filter(c => !~oldLastIds.indexOf(c.id));
+	console.log(cur);
+	if(noSend) return;
+	let guild = client.guilds.get(GUILD_ID);
+	let channel = guild.channels.get(STREAMS_ID);
+	cur.map(async c => {
+		let user = (await fetch(`https://api.twitch.tv/helix/users?id=${c.user_id}`, t).then(r => r.json())).data[0];
+		channel.send(user.display_name + " is now streaming live on Twitch!", { embed: {
+			color: 0x6441a5,
+			author: {
+				icon_url: user.profile_image_url,
+				name: user.display_name,
+			},
+			title: c.title,
+			url: `https://twitch.tv/${user.display_name}`,
+			timestamp: c.started_at,
+		} })
+	});
+}
 
 app.post("/newDeck", bodyParser.text(), async (req, res) => {
 	res.status(204).end();
