@@ -78,7 +78,7 @@ client.on("message", async message => {
 				.replace("@epiepic", `<@${client.user.id}>`)
 		);
 	if(content.startsWith("!r60") || content.startsWith("!r56"))
-		return rN(channel, author, +content.slice(2,4));
+		return rN(channel, author, +content.slice(2,4), content.slice(5));
 	if(content === "!cr")
 		content = "!card random";
 	if(content.startsWith("!r "))
@@ -162,7 +162,8 @@ async function parseRules(message, channel, filterString){
 	channel.send({ embed: { url, title: section.replace(/^#+ /, "") } });
 }
 
-async function rN(channel, user, n){
+async function rN(channel, user, n, setFilter){
+	setFilter = setFilter.replace("core", "set1").toLowerCase().trim().split(/\s+/g);
 	let N = n;
 	let fs = [13,13,13,13];
 	while(n > 52){
@@ -172,7 +173,11 @@ async function rN(channel, user, n){
 		n--;
 		fs[i]++;
 	}
-	let factions = "GOOD SAGE EVIL WILD".split(" ").map(f => cards.filter(c => c.faction === f && c.packCode !== "promos"));
+	let factions = "GOOD SAGE EVIL WILD".split(" ").map(f => cards.filter(c =>
+		c.faction === f &&
+		c.packCode !== "tokens" &&
+		(!setFilter.join("") ? c.packCode !== "promos" : ~setFilter.indexOf(c.packCode))
+	));
 	let deck = [];
 	fs.map((m, i) => {
 		for(;m;m--)
