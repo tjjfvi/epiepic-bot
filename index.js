@@ -120,7 +120,7 @@ async function cardbot(message, content, author, channel) {
 		if (cs[filterString.slice(0, 1)] && +filterString.slice(1)) {
 			let { channel: _channel, user, cards, filterString: str, open } = choice = cs[filterString.slice(0, 1)];
 			let card = cards[filterString.slice(1) - 1];
-			postImage(card, user.id === author.id && open && channel === message.channel ? _channel : channel, author, str);
+			postImage(card, user.id === author.id && open && channel === message.channel ? _channel : channel, author, str, isPre);
 			choice.open = false;
 			return;
 		}
