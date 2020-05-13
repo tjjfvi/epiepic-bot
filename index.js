@@ -41,7 +41,7 @@ let alpha = "abcdefghijklmnopqrstuvwxyz".split("");
 let letterInd = 0;
 let letterIndPre = 0;
 let cards = (async () => {
-	cards = await (await fetch(`${BASE_URL}api/card/.json`)).json();
+	cards = await (await fetch(`${BASE_URL}api/card/public.json`)).json();
 })();
 let rulingsText;
 let rulesText = (async () => {
@@ -134,7 +134,7 @@ async function cardbot(message, content, author, channel) {
 			.join("")
 		, "i");
 	let matched = cards.filter(c =>
-		(isPre || !c.prerelease) &&
+		(c.released || isPre) &&
 		(
 			filterRegex.test(c.name) ||
 			(filterString.length >= 4 && c.traits && c.traits.toLowerCase().includes(filterString)) ||
@@ -194,7 +194,7 @@ async function rN(channel, user, n, setFilter) {
 	let factions = "GOOD SAGE EVIL WILD".split(" ").map(f => cards.filter(c =>
 		c.faction === f &&
 		c.packCode !== "tokens" &&
-		(!setFilter.join("") ? c.packCode !== "promos" && !c.prerelease : ~setFilter.indexOf(c.packCode))
+		(!setFilter.join("") ? c.packCode !== "promos" && c.released : ~setFilter.indexOf(c.packCode))
 	));
 	let deck = [];
 	fs.map((m, i) => {
