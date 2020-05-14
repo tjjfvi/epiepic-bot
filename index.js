@@ -237,8 +237,13 @@ async function postImage(card, channel, user, filterString, isPre) {
 	let cardbotChannel = guild.channels.get(isPre ? PRECARDBOT_ID : CARDBOT_ID);
 	let sinkChannel = guild.channels.get(SINK_ID);
 	let imageUrl = `${BASE_URL}images/${card._id}.jpg`;
-	let message = await sinkChannel.send({ files: [imageUrl] });
-	imageUrl = [...message.attachments.values()][0].url;
+	let message;
+	try {
+		message = await sinkChannel.send({ files: [imageUrl] });
+		imageUrl = [...message.attachments.values()][0].url;
+	} catch (e) {
+		imageUrl = null
+	}
 	let formatTextVar = t => t
 		.replace(/\n(.)/g, " $1")
 		.replace(/\n\n/g, "\n")
