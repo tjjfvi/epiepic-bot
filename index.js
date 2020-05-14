@@ -100,10 +100,14 @@ client.on("message", async message => {
 			content = "!card " + content;
 		else return;
 	}
-	if (channel.id === CARDBOT_ID && channelLinkRegex.test(content)) {
+	if ((channel.id === CARDBOT_ID || channel.id === PRECARDBOT_ID) && channelLinkRegex.test(content)) {
 		let [_, _content, channelId] = channelLinkRegex.exec(content);
 		content = _content;
-		channel = channel.guild.channels.get(channelId);
+		let newChannel = channel.guild.channels.get(channelId);
+		if (channel.id !== PRECARDBOT_ID || newChannel.id === PRERELEASE_ID)
+			channel = newChannel;
+		else
+			message.react(emoji("plucker"));
 	}
 	cardbot(message, content, author, channel);
 });
